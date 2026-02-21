@@ -39,7 +39,6 @@ class MainMenu(State):
         # Agregar estados a la maquina.
         self.state_machine.add_state("title", title)
         self.state_machine.add_state("load_game", load_game)
-        # self.state_machine.add_state("ajustes", ajustes)
 
         # Establecer estado inicial.
         self.state_machine.set_starting_state("title")
@@ -96,15 +95,7 @@ def load_title_buttons(font_text: pg.font.Font) -> Dict[str, Button]:
                                         caption = "Cargar Partida",
                                         radius = 6
                                         )
-    title_buttons["settings"] = Button(x = 552, y = 503, w = 177, h = 58,
-                                       color_bg = c.COLOUR_BROWN,
-                                       color_fg = c.COLOUR_CREAM,
-                                       color_select = c.COLOUR_DARK_BROWN,
-                                       font = font_text,
-                                       caption = "Ajustes",
-                                       radius = 6
-                                       )
-    title_buttons["close"] = Button(x = 552, y = 567, w = 177, h = 58,
+    title_buttons["close"] = Button(x = 552, y = 503, w = 177, h = 58,
                                     color_bg = c.COLOUR_BROWN,
                                     color_fg = c.COLOUR_CREAM,
                                     color_select = c.COLOUR_DARK_BROWN,
@@ -119,5 +110,7 @@ def load_title_images() -> Dict[str, pg.Surface]:
     title_images["background"] = pg.image.load("assets/main_menu/main_menu_bg.png")
     title_images["container_centre"] = pg.image.load("assets/main_menu/container_centre.png")
     title_images["title"] = None
+    title_images["pomodoro"] = pg.image.load("assets/main_menu/pomodoro.png")
+    title_images["tower_defense"] = pg.image.load("assets/main_menu/tower_defense.png")
     
     return title_images

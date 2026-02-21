@@ -56,6 +56,8 @@ class Title(State):
     def draw(self, surface: pg.Surface) -> None:
         surface.blit(self.images["background"], (0, 0))
         surface.blit(self.images["container_centre"], (513, 0))
+        surface.blit(self.images["pomodoro"], (368, 120))
+        surface.blit(self.images["tower_defense"], (240, 155))
 
         # Dibujar elementos de la interfaz grafica.
         for button in self.buttons:
