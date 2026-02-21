@@ -20,3 +20,5 @@ COLOUR_RED   = (225, 102,  91)
 
 # Variantes oscuras.
 COLOUR_DARK_BROWN = (113,  77,  41)
+
+SAVE_DIR = "saves/"

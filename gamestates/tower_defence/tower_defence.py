@@ -30,7 +30,7 @@ class WaveManager:
         self.current_time = 0.0                # tiempo acumulado en ms
         self.elapsed = 0.0
 
-        # ParÃ¡metros de oleadas
+        # Parámetros de oleadas
         self.wave_interval = 30          # segundos entre inicios de oleada
         self.initial_delay = 5           # segundos antes de la primera oleada
         self.wave_number = 0
@@ -124,9 +124,10 @@ class WaveManager:
 
 
 class TowerDefence(State):
-    def __init__(self, parent_state_machine, level: str) -> None:
+    def __init__(self, parent_state_machine, level: str, sound_manager) -> None:
         # Referencia a la state machine que llamara a este estado
         self.parent_state_machine = parent_state_machine
+        self.sound_manager = sound_manager
 
         # Cargas datos del mapa.
         if level == "level1":
@@ -163,6 +164,12 @@ class TowerDefence(State):
             "longbow": pg.image.load("assets/turrets/longbow.png"),
             "mortar": pg.image.load("assets/turrets/mortar.png")
         }
+
+        self.turret_names = {
+            "shortbow": "Arco Corto",
+            "longbow": "Arco Largo",
+            "mortar": "Cañón"
+        }
         
         # Crear grupos de enemigos y torretas.
         self.turret_group = pg.sprite.Group()
@@ -171,6 +178,10 @@ class TowerDefence(State):
         self.base_health = 10
         self.game_over = False
         self.paused = False
+
+        self.multipliers = {"purchase_cost": 1.0, "upgrade_cost": 1.0,
+                            "cooldown": 1.0, "damage": 1.0}
+        self.start_money = 200
 
         self.wave_manager = WaveManager(self.enemy_group, self.level.waypoints,
                                         self.enemy_types, 300, self.enemy_escaped)
@@ -198,8 +209,6 @@ class TowerDefence(State):
         button_width = 160
         button_height = 33
         y_offset = 100
-        names = ["Arco Corto", "Arco Largo", "Cañón"]
-        count = 0
         for i, (ttype, cost) in enumerate(self.turret_costs.items()):
             btn = Button(
                 x=self.sidebar_rect.x + 20,
@@ -210,10 +219,9 @@ class TowerDefence(State):
                 color_fg=c.COLOUR_CREAM,
                 color_select=c.COLOUR_DARK_BROWN,
                 font=self.font,
-                caption=f"{names[count]} (${cost})",
+                caption=f"{self.turret_names[ttype]} (${cost})",
                 radius=5
             )
-            count += 1
             self.turret_buttons[ttype] = btn
 
         self.selected_turret = None
@@ -242,12 +250,12 @@ class TowerDefence(State):
                    self.font, "Reanudar", radius=5),
             Button(center_x - btn_w//2, base_y + 60, btn_w, btn_h,
                    c.COLOUR_BROWN, c.COLOUR_CREAM, c.COLOUR_DARK_BROWN,
-                   self.font, "Menú Principal", radius=5)
+                   self.font, "Regresar", radius=5)
         ]
 
         # Botones de game over / victoria
         self.end_buttons = {
-            "menu": Button(center_x - btn_w//2, base_y + 120, btn_w, btn_h,
+            "return": Button(center_x - btn_w//2, base_y + 120, btn_w, btn_h,
                            c.COLOUR_BROWN, c.COLOUR_CREAM, c.COLOUR_DARK_BROWN,
                            self.font, "Regresar", radius=5)
         }
@@ -266,7 +274,7 @@ class TowerDefence(State):
     def restart(self):
         self.turret_group.empty()
         self.enemy_group.empty()
-        self.money = 200
+        self.money = self.start_money
         self.base_health = 10
         self.game_over = False
         self.paused = False
@@ -291,7 +299,7 @@ class TowerDefence(State):
                 if event.key == K_ESCAPE:
                     if self.game_over or self.wave_manager.victory:
                         # Si ya terminó, ESC vuelve al menú
-                        self.parent_state_machine.current_state = "main_menu"
+                        pass
                     else:
                         # Alternar pausa
                         self.paused = not self.paused
@@ -307,35 +315,41 @@ class TowerDefence(State):
                             img = self.turret_images[self.selected_turret_type]
                             turret = Turret(img, self.level.selected_tile[0], self.level.selected_tile[1], self.selected_turret_type)
                             self.turret_group.add(turret)
+                elif event.key == K_F2:
+                    self.wave_manager.victory = True
 
             elif event.type == MOUSEBUTTONUP and event.button == 1:
                 # Si hay game over o victoria, solo se procesan los botones finales
                 if self.game_over or self.wave_manager.victory:
                     for key, btn in self.end_buttons.items():
                         if btn.is_hovered:
-                            if key == "menu":
-                                self.parent_state_machine.current_state = "main_menu"
+                            self.sound_manager.play_sound("click")
+                            if key == "return":
+                                reward = self.money - self.start_money
+                                if reward >= 0:
+                                    self.parent_state_machine.shared_data["defense_reward"] = reward
+                                self.parent_state_machine.current_state = "town"
                                 self.restart() 
                             return
                 # Si está en pausa, solo procesar botones de pausa
                 elif self.paused:
                     for i, btn in enumerate(self.pause_buttons):
                         if btn.is_hovered:
+                            self.sound_manager.play_sound("click")
                             if i == 0:  # Reanudar
                                 self.paused = False
                             elif i == 1:  # Menú Principal
-                                self.parent_state_machine.current_state = "main_menu"
+                                self.parent_state_machine.current_state = "town"
                                 self.restart() 
                             return
                 else:
-                    # Juego normal: procesar botones de torreta y mejora
-                    # Comprobar clic en botones de torreta
                     clicked_button = None
                     for ttype, btn in self.turret_buttons.items():
                         if btn.is_hovered:
                             clicked_button = ttype
                             break
                     if clicked_button:
+                        self.sound_manager.play_sound("click")
                         self.selected_turret_type = clicked_button
                         print(f"Torreta seleccionada: {clicked_button}")
                         continue
@@ -343,11 +357,14 @@ class TowerDefence(State):
                     # Comprobar clic en botón de mejora
                     if self.upgrade_button.is_hovered:
                         if self.selected_turret:
-                            cost = self.selected_turret.get_upgrade_cost()
-                            if cost and self.money >= cost:
-                                self.selected_turret.upgrade()
-                                self.money -= cost
-                                self.stats["money_spent"] += cost
+                            base_cost = self.selected_turret.get_upgrade_cost()
+                            if base_cost:
+                                cost = int(base_cost * self.multipliers["upgrade_cost"])
+                                if self.money >= cost:
+                                    self.sound_manager.play_sound("upgrade")
+                                    self.selected_turret.upgrade()
+                                    self.money -= cost
+                                    self.stats["money_spent"] += cost
                         continue
 
                     # Clic en el mapa
@@ -356,18 +373,23 @@ class TowerDefence(State):
                         if self.level.tiles[tile_index] == 43:
                             # Casilla construible
                             if self.selected_turret_type and self.money >= self.turret_costs[self.selected_turret_type]:
-                                if not self.is_tile_occupied(self.mouse_posx, self.mouse_posy):
-                                    # Colocar torreta
-                                    img = self.turret_images[self.selected_turret_type]
-                                    turret = Turret(img, self.mouse_posx, self.mouse_posy, self.selected_turret_type)
-                                    self.turret_group.add(turret)
-                                    self.money -= self.turret_costs[self.selected_turret_type]
-                                    self.stats["money_spent"] += self.turret_costs[self.selected_turret_type]
-                                    self.level.selected_tile = (self.mouse_posx, self.mouse_posy)
-                                    self.selected_turret_type = None
-                                else:
-                                    print("Casilla ocupada por otra torreta")
-                                    self.level.selected_tile = (self.mouse_posx, self.mouse_posy)
+                                cost = int(self.turret_costs[self.selected_turret_type] * self.multipliers["purchase_cost"])
+                                if self.money >= cost:
+                                    if not self.is_tile_occupied(self.mouse_posx, self.mouse_posy):
+                                        # Colocar torreta
+                                        self.sound_manager.play_sound("purchase")
+                                        img = self.turret_images[self.selected_turret_type]
+                                        turret = Turret(img, self.mouse_posx, self.mouse_posy, self.selected_turret_type, self.sound_manager)
+                                        turret.cooldown = int(turret.cooldown * self.multipliers["cooldown"])
+                                        turret.damage = int(turret.damage * self.multipliers["damage"])
+                                        self.turret_group.add(turret)
+                                        self.money -= cost
+                                        self.stats["money_spent"] += cost
+                                        self.level.selected_tile = (self.mouse_posx, self.mouse_posy)
+                                        self.selected_turret_type = None
+                                    else:
+                                        print("Casilla ocupada por otra torreta")
+                                        self.level.selected_tile = (self.mouse_posx, self.mouse_posy)
                             else:
                                 # Solo seleccionar la casilla
                                 self.level.selected_tile = (self.mouse_posx, self.mouse_posy)
@@ -376,7 +398,7 @@ class TowerDefence(State):
                     else:
                         self.level.selected_tile = None
 
-                    # Actualizar torreta seleccionada segÃºn la casilla
+                    # Actualizar torreta seleccionada según la casilla
                     if self.level.selected_tile:
                         tx, ty = self.level.selected_tile
                         found = None
@@ -399,9 +421,20 @@ class TowerDefence(State):
             return
         self.base_health -= 1
         if self.base_health <= 0:
+            self.sound_manager.play_sound("game_over")
             self.game_over = True
             self.end_time = pg.time.get_ticks()
+            return
+        self.sound_manager.play_sound("enemy_escape")
 
+    def set_multipliers(self, multipliers):
+        self.multipliers = multipliers
+        self.update_turret_button_captions()
+
+    def set_initial_money(self, money):
+        self.money = money
+        self.start_money = money
+            
     def update(self, dt: float) -> None:
         # Actualizar posiciÃ³n del cursor (siempre)
         self.mouse_pos = pg.mouse.get_pos()
@@ -431,6 +464,7 @@ class TowerDefence(State):
 
         # Detectar victoria por tiempo y guardar tiempo final
         if self.wave_manager.victory and self.end_time == 0:
+            self.sound_manager.play_sound("victory")
             self.end_time = pg.time.get_ticks()
 
         # Si game_over se activó por otra razón y no se guardó, se guarda aquí
@@ -544,8 +578,9 @@ class TowerDefence(State):
                 surface.blit(cd_surf, (self.sidebar_rect.x + 20, info_y + 66))
                 cost = turret.get_upgrade_cost()
                 if cost:
-                    color = c.COLOUR_GREEN if self.money >= cost else c.COLOUR_RED
-                    cost_surf = self.font.render(f"Mejorar: ${cost}", True, color)
+                    real_cost = int(cost * self.multipliers["upgrade_cost"])
+                    color = c.COLOUR_GREEN if self.money >= real_cost else c.COLOUR_RED
+                    cost_surf = self.font.render(f"Mejorar: ${real_cost}", True, color)
                     surface.blit(cost_surf, (self.sidebar_rect.x + 20, info_y + 88))
 
         # Dibujar overlays según estado
@@ -610,6 +645,12 @@ class TowerDefence(State):
         for btn in self.end_buttons.values():
             btn.draw(surface)
 
+    def update_turret_button_captions(self):
+        for ttype, btn in self.turret_buttons.items():
+            base_cost = self.turret_costs[ttype]
+            real_cost = int(base_cost * self.multipliers["purchase_cost"])
+            btn.set_caption(f"{self.turret_names[ttype]} (${real_cost})", self.font)
+            
     def draw_victory_overlay(self, surface):
         overlay = pg.Surface((c.WIN_WIDTH, c.WIN_HEIGHT), pg.SRCALPHA)
         overlay.fill((0, 0, 0, 180))

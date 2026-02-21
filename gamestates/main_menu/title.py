@@ -14,8 +14,9 @@ from utils import constants as c
 class Title(State):
     def __init__(self, buttons: Dict[str, Button],
                  images: Dict[str, pg.Surface],
-                 parent_state_machine: StateMachine) -> None:
-        
+                 parent_state_machine: StateMachine,
+                 sound_manager) -> None:
+        self.sound_manager = sound_manager
         self.buttons = buttons
         self.images = images
         self.parent_state_machine = parent_state_machine
@@ -26,6 +27,7 @@ class Title(State):
                 if event.button == 1:
                     for button in self.buttons:
                         if self.buttons[button].is_hovered:
+                            self.sound_manager.play_sound("click")
                             self.buttons[button].is_clicked = True
             elif event.type == KEYUP:
                 if event.key == K_UP:

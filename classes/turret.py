@@ -18,19 +18,21 @@ class Turret(pg.sprite.Sprite):
                  image: pg.Surface,
                  tile_x: int,
                  tile_y: int,
-                 type: str
-                 ) -> None:
+                 type: str,
+                 sound_manager) -> None:
         # Inicializar clase padre Sprite
         pg.sprite.Sprite.__init__(self)
+        self.sound_manager = sound_manager
 
         # Parametros basicos de la torreta.
         self.type = type
         self.level_limit = 2 # Limite superior inclusivo de nivel de la torreta.
-        self.level = 1 # Nivel de la torre, se usa para asignar sus estadï¿½sticas.
+        self.level = 1 # Nivel de la torre, se usa para asignar sus estadísticas.
+        self.splash_radius = TURRET_DATA[self.type][self.level - 1]["splash_radius"]
         self.range = TURRET_DATA[self.type][self.level - 1]["range"] # Rango de la torre.
         self.damage = TURRET_DATA[self.type][self.level -1]["damage"]
         self.cooldown = TURRET_DATA[self.type][self.level - 1]["cooldown"] # Cadencia de disparo.
-        self.last_shot = pg.time.get_ticks() # Tiempo de juego al momento del ï¿½ltimo disparo.
+        self.last_shot = pg.time.get_ticks() # Tiempo de juego al momento del último disparo.
         self.target = None # Objetivo de la torreta.
 
         # Localizacion de la torreta en casillas.
@@ -72,7 +74,7 @@ class Turret(pg.sprite.Sprite):
             dist = math.sqrt(x_dist ** 2 + y_dist ** 2)            
             if dist < self.range:
                 if (pg.time.get_ticks() - self.last_shot) > self.cooldown:
-                    self.shoot_to_target()
+                    self.shoot_to_target(enemy_group)
             else:
                 self.target = None
                 print("Target lost!")
@@ -82,14 +84,31 @@ class Turret(pg.sprite.Sprite):
             self.pick_target(enemy_group)
             if self.target:
                 if pg.time.get_ticks() - self.last_shot > self.cooldown:
-                    self.shoot_to_target()
+                    self.shoot_to_target(enemy_group)
 
-    def shoot_to_target(self) -> None:
+    def shoot_to_target(self, enemy_group) -> None:
         self.last_shot = pg.time.get_ticks()
+        # Daño al objetivo principal
         self.target.current_health -= self.damage
+        # Daño en área si corresponde
+        if self.splash_radius > 0 and self.target is not None:
+            for enemy in enemy_group:
+                if enemy != self.target:
+                    dist = math.hypot(enemy.pos[0] - self.target.pos[0],
+                                      enemy.pos[1] - self.target.pos[1])
+                    if dist < self.splash_radius:
+                        enemy.current_health -= self.damage
+        # Comprobar si el objetivo murió
         if self.target.current_health <= 0:
             self.target = None
         print("Shot!")
+        if self.type == "shortbow":
+            self.sound_manager.play_sound("bow_shot")
+        elif self.type == "longbow":
+            self.sound_manager.play_sound("longbow_shot")
+        elif self.type == "mortar":
+            if self.splash_radius > 0:
+                self.sound_manager.play_sound("mortar_explosion")
 
     def pick_target(self, enemy_group):
         # Buscar un enemigo al que disparar.
@@ -128,6 +147,7 @@ class Turret(pg.sprite.Sprite):
             self.range = TURRET_DATA[self.type][self.level - 1]["range"]
             self.cooldown = TURRET_DATA[self.type][self.level - 1]["cooldown"]
             self.damge = TURRET_DATA[self.type][self.level - 1]["damage"]
+            self.splash_radius = TURRET_DATA[self.type][self.level - 1]["splash_radius"]
 
             # Actualizar imagen de rango de la torreta.
             self.range_img = pg.Surface((self.range * 2, self.range * 2))

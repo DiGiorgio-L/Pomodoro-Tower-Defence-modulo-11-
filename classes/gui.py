@@ -94,6 +94,10 @@ class Button():
         else:
             self.is_hovered = False
 
+    def set_caption(self, new_caption: str, font: pg.font.Font):
+        self.caption = font.render(new_caption, True, self.color_fg)
+        self.caption_rect = self.caption.get_rect(center=self.rect.center)
+
 class ButtonCustom():
     def __init__(self,
                  x,

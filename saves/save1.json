@@ -1,0 +1,21 @@
+{
+    "money": 0,
+    "time_units": 0,
+    "buildings": {
+        "wheat_field": {
+            "level": 0,
+            "cost_gold": 100,
+            "cost_time": 1
+        },
+        "smithing_house": {
+            "level": 0,
+            "cost_gold": 150,
+            "cost_time": 1
+        },
+        "shooting_range": {
+            "level": 0,
+            "cost_gold": 200,
+            "cost_time": 2
+        }
+    }
+}

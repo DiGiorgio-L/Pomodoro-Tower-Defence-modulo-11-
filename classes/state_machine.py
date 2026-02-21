@@ -35,6 +35,7 @@ class StateMachine():
         self.prev_state = None
         self.current_state = None
         self.exit_state = None
+        self.shared_data = {}
 
     def set_starting_state(self, key: str):
         self.current_state = key

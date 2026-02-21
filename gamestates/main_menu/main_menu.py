@@ -1,5 +1,5 @@
 # Modulos de python.
-import sys
+import sys, os, json
 from typing import List, Dict
 
 # Modulos de pygame.
@@ -11,12 +11,13 @@ from classes.state_machine import State, StateMachine
 from classes.gui import Button
 from gamestates.main_menu.title import Title
 from gamestates.main_menu.load_game import LoadGame
+from gamestates.town.town import Town
 
 from utils import constants as c
 
 class MainMenu(State):
-    def __init__(self, parent_state_machine) -> None:
-        
+    def __init__(self, parent_state_machine, sound_manager) -> None:
+        self.sound_manager = sound_manager
         # Referenacia a la state machine que llamara a este estado
         self.parent_state_machine = parent_state_machine
         
@@ -33,8 +34,8 @@ class MainMenu(State):
         self.state_machine = StateMachine()
 
         # Instanciar estados de la maquina.
-        title = Title(title_buttons, title_images, self.state_machine)
-        load_game = LoadGame(self.state_machine, font_pirata_one, font_pirata_one_big, title_images["background"])
+        title = Title(title_buttons, title_images, self.state_machine, self.sound_manager)
+        load_game = LoadGame(self.state_machine, font_pirata_one, font_pirata_one_big, title_images["background"], title_images["pomodoro"], title_images["tower_defense"], self.sound_manager)
 
         # Agregar estados a la maquina.
         self.state_machine.add_state("title", title)
@@ -50,26 +51,50 @@ class MainMenu(State):
         if self.state_machine.exit_state == None:
             self.state_machine.update(dt)
         elif self.state_machine.exit_state == "save1":
-            # TODO: Necesito hacer que al cargar el juego también tome el
-            # archivo de guardado a cargar.
-            self.parent_state_machine.prev_state = self.parent_state_machine.current_state
-            self.parent_state_machine.current_state = "tower_defence"
+            slot = 1
+            save_path = os.path.join(c.SAVE_DIR, f"save{slot}.json")
+            if os.path.exists(save_path):
+                with open(save_path, 'r') as f:
+                    save_data = json.load(f)
+            else:
+                save_data = None  # Nueva partida
+
+            town_state = Town(self.parent_state_machine, save_data=save_data, save_slot=slot, sound_manager=self.sound_manager)
+            self.parent_state_machine.add_state("town", town_state)
+            self.parent_state_machine.current_state = "town"
             self.state_machine.exit_state = None
             self.state_machine.current_state = "title"
+            
         elif self.state_machine.exit_state == "save2":
-            # TODO: Necesito hacer que al cargar el juego también tome el
-            # archivo de guardado a cargar.
-            self.parent_state_machine.prev_state = self.parent_state_machine.current_state
-            self.parent_state_machine.current_state = "tower_defence"
+            slot = 2
+            save_path = os.path.join(c.SAVE_DIR, f"save{slot}.json")
+            if os.path.exists(save_path):
+                with open(save_path, 'r') as f:
+                    save_data = json.load(f)
+            else:
+                save_data = None  # Nueva partida
+
+            town_state = Town(self.parent_state_machine, save_data=save_data, save_slot=slot, sound_manager=self.sound_manager)
+            self.parent_state_machine.add_state("town", town_state)
+            self.parent_state_machine.current_state = "town"
             self.state_machine.exit_state = None
             self.state_machine.current_state = "title"
+            
         elif self.state_machine.exit_state == "save3":
-            # TODO: Necesito hacer que al cargar el juego también tome el
-            # archivo de guardado a cargar.
-            self.parent_state_machine.prev_state = self.parent_state_machine.current_state
-            self.parent_state_machine.current_state = "tower_defence"
+            slot = 3
+            save_path = os.path.join(c.SAVE_DIR, f"save{slot}.json")
+            if os.path.exists(save_path):
+                with open(save_path, 'r') as f:
+                    save_data = json.load(f)
+            else:
+                save_data = None  # Nueva partida
+
+            town_state = Town(self.parent_state_machine, save_data=save_data, save_slot=slot, sound_manager=self.sound_manager)
+            self.parent_state_machine.add_state("town", town_state)
+            self.parent_state_machine.current_state = "town"
             self.state_machine.exit_state = None
             self.state_machine.current_state = "title"
+            
         else:
             self.parent_state_machine.terminate_machine(self.state_machine.exit_state)
 
