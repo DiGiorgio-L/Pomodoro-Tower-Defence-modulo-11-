@@ -55,16 +55,22 @@ class MainMenu(State):
             # archivo de guardado a cargar.
             self.parent_state_machine.prev_state = self.parent_state_machine.current_state
             self.parent_state_machine.current_state = "tower_defence"
+            self.state_machine.exit_state = None
+            self.state_machine.current_state = "title"
         elif self.state_machine.exit_state == "save2":
             # TODO: Necesito hacer que al cargar el juego también tome el
             # archivo de guardado a cargar.
             self.parent_state_machine.prev_state = self.parent_state_machine.current_state
             self.parent_state_machine.current_state = "tower_defence"
+            self.state_machine.exit_state = None
+            self.state_machine.current_state = "title"
         elif self.state_machine.exit_state == "save3":
             # TODO: Necesito hacer que al cargar el juego también tome el
             # archivo de guardado a cargar.
             self.parent_state_machine.prev_state = self.parent_state_machine.current_state
             self.parent_state_machine.current_state = "tower_defence"
+            self.state_machine.exit_state = None
+            self.state_machine.current_state = "title"
         else:
             self.parent_state_machine.terminate_machine(self.state_machine.exit_state)
 

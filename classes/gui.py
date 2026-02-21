@@ -92,7 +92,25 @@ class Button():
         if self.rect.collidepoint(pg.mouse.get_pos()):
             self.is_hovered = True
         else:
-            self.is_hovered = False        
+            self.is_hovered = False
 
-    
+class ButtonCustom():
+    def __init__(self,
+                 x,
+                 y,
+                 img_idle,
+                 img_hovered
+                 ) -> None:
+        self.img_idle = img_idle
+        self.img_hovered = img_hovered
+        self.rect = img_idle
+        self.rect.topleft = (x, y)
+
+        self.is_hovered = False
+        self.is_pressed = False
         
+    def update(self) -> None:
+        if self.rect.collidepoint(pg.mouse.get_pos()):
+            self.is_hovered = True
+        else:
+            self.is_hovered = False        

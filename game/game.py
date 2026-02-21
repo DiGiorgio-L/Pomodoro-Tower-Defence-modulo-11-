@@ -24,7 +24,7 @@ class PomodoroTD(GameBase):
 
         super().__init__(metadata)
 
-        # Crea m�quina de estados.
+        # Crea maquina de estados.
         self.state_machine = StateMachine()
 
         # Intanciar estados de la maquina.
@@ -55,6 +55,9 @@ class PomodoroTD(GameBase):
         elif self.state_machine.exit_state == "tower_defence":
             self.state_machine.current_state = "tower_defence"
             self.state_machine.exit_state = None 
+        elif self.state_machine.exit_state == "main_menu":
+            self.state_machine.current_state = "main_menu"
+            self.state_machine.exit_state = None
 
     def draw(self) -> None:
         self.state_machine.draw(self.surface)

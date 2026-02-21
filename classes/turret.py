@@ -1,3 +1,5 @@
+# -*- coding: latin-1 -*-
+
 # Python modules
 import sys
 import math
@@ -15,17 +17,19 @@ class Turret(pg.sprite.Sprite):
     def __init__(self,
                  image: pg.Surface,
                  tile_x: int,
-                 tile_y: int
+                 tile_y: int,
+                 type: str
                  ) -> None:
         # Inicializar clase padre Sprite
         pg.sprite.Sprite.__init__(self)
 
         # Parametros basicos de la torreta.
+        self.type = type
         self.level_limit = 2 # Limite superior inclusivo de nivel de la torreta.
         self.level = 1 # Nivel de la torre, se usa para asignar sus estadï¿½sticas.
-        self.range = TURRET_DATA[self.level - 1]["range"] # Rango de la torre.
-        self.cooldown = TURRET_DATA[self.level - 1]["cooldown"] # Cadencia de disparo.
-        # self.damage = TURRET_DATA[self.level - 1]["damage"]
+        self.range = TURRET_DATA[self.type][self.level - 1]["range"] # Rango de la torre.
+        self.damage = TURRET_DATA[self.type][self.level -1]["damage"]
+        self.cooldown = TURRET_DATA[self.type][self.level - 1]["cooldown"] # Cadencia de disparo.
         self.last_shot = pg.time.get_ticks() # Tiempo de juego al momento del ï¿½ltimo disparo.
         self.target = None # Objetivo de la torreta.
 
@@ -82,6 +86,9 @@ class Turret(pg.sprite.Sprite):
 
     def shoot_to_target(self) -> None:
         self.last_shot = pg.time.get_ticks()
+        self.target.current_health -= self.damage
+        if self.target.current_health <= 0:
+            self.target = None
         print("Shot!")
 
     def pick_target(self, enemy_group):
@@ -107,12 +114,20 @@ class Turret(pg.sprite.Sprite):
         if self.show_range:
             surface.blit(self.range_img, self.range_rect)
 
+    def get_upgrade_cost(self):
+        if self.level < self.level_limit:
+            # El siguiente nivel tiene índice self.level (porque level empieza en 1)
+            next_level_data = TURRET_DATA[self.type][self.level]
+            return next_level_data.get("upgrade_cost", 0)
+        return None
+            
     def upgrade(self):
         # Si esta dentro del limite, subir de nivel.
         if self.level < self.level_limit:
             self.level += 1
-            self.range = TURRET_DATA[self.level - 1]["range"]
-            self.cooldown = TURRET_DATA[self.level - 1]["cooldown"]
+            self.range = TURRET_DATA[self.type][self.level - 1]["range"]
+            self.cooldown = TURRET_DATA[self.type][self.level - 1]["cooldown"]
+            self.damge = TURRET_DATA[self.type][self.level - 1]["damage"]
 
             # Actualizar imagen de rango de la torreta.
             self.range_img = pg.Surface((self.range * 2, self.range * 2))
