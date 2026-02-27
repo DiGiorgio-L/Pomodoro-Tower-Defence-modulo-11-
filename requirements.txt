@@ -1,0 +1,6 @@
+pygame==2.6.1
+
+-e git+https://github.com/alecsoc/enfocate-core-lib.git@052e817784fed94544a78ca8361eb56be63fff16#egg=enfocate_core_lib
+
+
+

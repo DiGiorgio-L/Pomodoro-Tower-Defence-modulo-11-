@@ -12,4 +12,3 @@ from game.game import PomodoroTD
 if __name__ == "__main__":
     game = PomodoroTD()
     game.run_preview()
-    

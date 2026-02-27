@@ -12,6 +12,7 @@ from classes.gui import Button
 from utils import constants as c
 
 class Title(State):
+    # Pantalla de titulo con botones para nueva partida, cargar y cerrar.
     def __init__(self, buttons: Dict[str, Button],
                  images: Dict[str, pg.Surface],
                  parent_state_machine: StateMachine,
@@ -22,6 +23,7 @@ class Title(State):
         self.parent_state_machine = parent_state_machine
 
     def handle_events(self, events: List[pg.event.Event]) -> None:
+        # Procesa eventos de mouse.
         for event in events:
             if event.type == MOUSEBUTTONUP:
                 if event.button == 1:
@@ -34,6 +36,7 @@ class Title(State):
                     print("UP")
 
     def update(self, dt: float) -> None:
+        # Actualiza botones y maneja clics.
         button_pressed: str = None
         for button in self.buttons:
             self.buttons[button].update()
@@ -56,11 +59,12 @@ class Title(State):
             self.parent_state_machine.current_state = "settings"
 
     def draw(self, surface: pg.Surface) -> None:
+        # Dibuja la pantalla de titulo.
         surface.blit(self.images["background"], (0, 0))
         surface.blit(self.images["container_centre"], (513, 0))
         surface.blit(self.images["pomodoro"], (368, 120))
         surface.blit(self.images["tower_defense"], (240, 155))
 
-        # Dibujar elementos de la interfaz grafica.
+        # Dibujar botones.
         for button in self.buttons:
             self.buttons[button].draw(surface)

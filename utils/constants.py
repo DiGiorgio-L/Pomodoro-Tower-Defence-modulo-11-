@@ -7,7 +7,7 @@
 WIN_WIDTH  = 1280
 WIN_HEIGHT = 720
 
-# Tamaño de casillas del nivel.
+# Tamano de casillas del nivel.
 TILE_SIZE = 48
 
 # Colores.
