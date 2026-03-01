@@ -47,7 +47,7 @@ class Title(State):
                break
 
         if button_pressed == "close":
-            pg.event.post(pg.event.Event(pg.QUIT))
+            self.parent_state_machine.exit_state = "close"
         elif button_pressed == "new_game":
             self.parent_state_machine.prev_state = "title"
             self.parent_state_machine.current_state = "load_game"
