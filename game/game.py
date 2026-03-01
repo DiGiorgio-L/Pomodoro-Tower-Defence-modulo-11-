@@ -21,7 +21,7 @@ class PomodoroTD(GameBase):
         pg.init()
         metadata = GameMetadata(
             title="Pomodoro Tower Defence",
-            description="Vacio",
+            description="Pomodoro Tower Defence integra la técnica Pomodoro con tower defence para ayudar a personas con TDAH a mejorar su concentración mientras se divierten.",
             authors=["Leonardo Di Giorgio, Ricardo Trevison, Victor Alcala, Camila Reyes"],
             group_number=11
         )
@@ -75,6 +75,8 @@ class PomodoroTD(GameBase):
         elif self.state_machine.exit_state == "main_menu":
             self.state_machine.current_state = "main_menu"
             self.state_machine.exit_state = None
+        elif self.state_machine.exit_state == "close":
+            self._stop_context()
 
     def draw(self) -> None:
         # Dibuja el estado actual en la superficie de la ventana.
